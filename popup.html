@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reminder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #000000;
+      --surface: #111111;
+      --surface-hover: #1a1a1a;
+      --border: #222222;
+      --border-focus: #c9a84c;
+      --gold: #c9a84c;
+      --gold-light: #e4c76b;
+      --gold-soft: rgba(201, 168, 76, 0.12);
+      --text: #f5f5f5;
+      --text-muted: #888888;
+      --text-dim: #555555;
+      --danger: #e04040;
+      --success: #c9a84c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 400px;
+      min-height: 520px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Dynamic Island ─── */
+    #dynamic-island {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%) scaleX(0.5) scaleY(0.5);
+      background: #1c1c1e;
+      border-radius: 36px;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  opacity 0.3s ease,
+                  padding 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  border-radius 0.4s ease;
+      box-shadow: 0 6px 36px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.08);
+      max-width: 380px;
+      overflow: hidden;
+    }
+
+    #dynamic-island.show {
+      transform: translateX(-50%) scaleX(1) scaleY(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #dynamic-island.expanded {
+      padding: 18px 30px;
+      border-radius: 22px;
+    }
+
+    #dynamic-island .di-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gold);
+      flex-shrink: 0;
+      animation: di-pulse 1.5s ease-in-out infinite;
+      box-shadow: 0 0 8px rgba(201, 168, 76, 0.5);
+    }
+
+    @keyframes di-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+
+    #dynamic-island .di-content {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    #dynamic-island .di-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gold-light);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #dynamic-island .di-msg {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      padding: 24px 22px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .header .badge {
+      background: var(--gold-soft);
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* ─── Divider ─── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 22px;
+    }
+
+    /* ─── Form ─── */
+    .form-section {
+      padding: 18px 22px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 7px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--gold-soft);
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: var(--text-dim);
+    }
+
+    .form-group textarea {
+      resize: none;
+      height: 56px;
+    }
+
+    /* ─── datetime-local tweaks ─── */
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) brightness(0.7);
+      cursor: pointer;
+    }
+
+    /* ─── Button ─── */
+    .set-btn {
+      width: 100%;
+      padding: 13px 0;
+      background: var(--gold);
+      color: #000;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
+      box-shadow: 0 2px 12px rgba(201, 168, 76, 0.2);
+    }
+
+    .set-btn:hover {
+      background: var(--gold-light);
+      box-shadow: 0 4px 18px rgba(201, 168, 76, 0.3);
+    }
+
+    .set-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* ─── Status ─── */
+    #status {
+      font-size: 13px;
+      text-align: center;
+      min-height: 20px;
+      margin-top: 10px;
+      transition: opacity 0.3s ease;
+    }
+
+    /* ─── Reminder List ─── */
+    .list-section {
+      padding: 0 22px 20px;
+    }
+
+    .list-header {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .reminder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .reminder-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .reminder-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .reminder-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .reminder-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      transition: border-color 0.2s ease, background 0.2s ease;
+      animation: fadeSlideIn 0.35s ease forwards;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .reminder-item:hover {
+      border-color: #333;
+      background: var(--surface-hover);
+    }
+
+    @keyframes fadeSlideIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reminder-item .info { flex: 1; min-width: 0; }
+
+    .reminder-item .title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .reminder-item .time {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 3px;
+    }
+
+    .reminder-item .msg {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 15px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: color 0.2s ease, background 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .delete-btn:hover {
+      color: var(--danger);
+      background: rgba(224, 64, 64, 0.08);
+    }
+
+    .empty-msg {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+      padding: 24px 0;
+      font-style: italic;
+    }
+
+    /* ─── Removing animation ─── */
+    .reminder-item.removing {
+      animation: fadeSlideOut 0.3s ease forwards;
+    }
+    @keyframes fadeSlideOut {
+      to { opacity: 0; transform: translateX(30px) scale(0.95); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Island -->
+  <div id="dynamic-island">
+    <span class="di-dot"></span>
+    <div class="di-content">
+      <span class="di-title"></span>
+      <span class="di-msg"></span>
+    </div>
+  </div>
+
+  <div class="header">
+    <h1>Reminders</h1>
+    <span class="badge" id="count-badge">0</span>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="form-section">
+    <div class="form-group">
+      <label for="title-input">Title</label>
+      <input id="title-input" type="text" placeholder="Take a break" maxlength="60"/>
+    </div>
+
+    <div class="form-group">
+      <label for="msg-input">Note</label>
+      <textarea id="msg-input" placeholder="Optional details..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="time-input">When</label>
+      <input id="time-input" type="datetime-local"/>
+    </div>
+
+    <button class="set-btn" id="set-btn">Set Reminder</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="divider" style="margin-bottom: 16px;"></div>
+
+  <div class="list-section">
+    <div class="list-header">Upcoming</div>
+    <div class="reminder-list" id="reminder-list"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
