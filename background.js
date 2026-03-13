@@ -44,7 +44,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // Inject Dynamic Island overlay into the currently active tab
 async function injectDynamicIsland(title, msg) {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
     if (!tab || !tab.id || tab.url.startsWith('chrome://')) return;
 
     await chrome.scripting.executeScript({
